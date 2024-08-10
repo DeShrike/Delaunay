@@ -169,11 +169,11 @@ bool has_2_points_in_common(Triangle* a, Triangle* b)
       in_common++;
    }
 
-   //printf("%d %d %d", a->ix1, a->ix2, a->ix3);
-   //printf("   >>  ");
-   //printf("%d %d %d  ", b->ix1, b->ix2, b->ix3);
+   if (in_common == 3)
+   {
+      printf("ERROR: identical triangles\n");
+   }
 
-   //printf("In common: %d\n", in_common);
    return (in_common == 2);
 }
 
@@ -321,7 +321,7 @@ bool process_stack(Delaunay* delaunay)
          continue;
       }
       
-      //printf("Neighbour: %d\n", tr->neighbours[n]);
+      printf("Neighbour: %d\n", tr->neighbours[n]);
 
       Triangle* ntr = &TRIA(delaunay, tr->neighbours[n]);
 
@@ -338,25 +338,28 @@ bool process_stack(Delaunay* delaunay)
       }
 
       // we need to swap
-      /*
-      for (int tria = 0; tria < delaunay->triangles.count; ++tria)
+      /*for (int tria = 0; tria < delaunay->triangles.count; ++tria)
       {
          Triangle* tt = &TRIA(delaunay, tria);
          printf("T%d: %d %d %d\n", tria, tt->ix1, tt->ix2, tt->ix3);
       }*/
-      //printf("Swapping %d and %d\n", stack[stack_pointer], tr->neighbours[n]);
+      printf("Swapping %d and %d\n", stack[stack_pointer], tr->neighbours[n]);
+
       swap_triangles(ntr, tr);
+
       /*printf("Swapped\n");
       for (int tria = 0; tria < delaunay->triangles.count; ++tria)
       {
          Triangle* tt = &TRIA(delaunay, tria);
          printf("T%d: %d %d %d\n", tria, tt->ix1, tt->ix2, tt->ix3);
       }*/
+
       for (int i = 0; i < delaunay->triangles.count; ++i)
       {
          calculate_neighbours(delaunay, i);
          calculate_circle(delaunay, i);
       }
+
       stack_push(tr->neighbours[0]);
       stack_push(tr->neighbours[1]);
       stack_push(tr->neighbours[2]);
@@ -379,7 +382,7 @@ void delaunay_step(Delaunay* delaunay)
 {
    if (delaunay->currentpoint >= delaunay->points.count)
    {
-      printf("No steps left\n");
+      // printf("No steps left\n");
       return;
    }
 
@@ -415,6 +418,7 @@ void delaunay_step(Delaunay* delaunay)
          tr->ix2 = delaunay->currentpoint;
          tr->circle = circle_from_triangle(&a, p, &c);
 
+         printf("A\n");
          da_append(&delaunay->triangles, n1);
          da_append(&delaunay->triangles, n2);
 
@@ -425,10 +429,14 @@ void delaunay_step(Delaunay* delaunay)
          stack_push(tr->neighbours[1]);
          stack_push(tr->neighbours[2]);
 
+         printf("B\n");
+
          for (int s = 0; s < stack_pointer; ++s)
          {
             calculate_neighbours(delaunay, stack[s]);
+            calculate_circle(delaunay, stack[s]);
          }
+         printf("C\n");
 
          while (process_stack(delaunay));
          break;
@@ -437,7 +445,7 @@ void delaunay_step(Delaunay* delaunay)
 
    if (!found)
    {
-      printf("ERROR: Point not in any triangle\n");
+      printf("ERROR: Point #%d not in any triangle\n", delaunay->currentpoint);
    }
    
    //printf("Triangle count: %d\n", delaunay->triangles.count);

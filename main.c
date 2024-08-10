@@ -41,6 +41,9 @@ int offsety = 0;
 void init()
 {
    points.count = 0;
+   
+   #if 0
+   // Grid
    for (int y = 100; y < HEIGHT - BORDER; y += 50)
    {
       for (int x = 100; x < WIDTH - BORDER; x += 50)
@@ -53,26 +56,34 @@ void init()
          da_append(&points, p);
       }
    }
+   #endif
 
-   /*for (int i = 0; i < POINT_COUNT; ++i)
+   #if 1
+   // Cirlce
+   for (float i = 0; i < 2 * M_PI; i += PI / 10)
    {
-      points[i].x = (rand() % (WIDTH - BORDER * 2)) + BORDER;
-      points[i].y = (rand() % (HEIGHT - BORDER * 2)) + BORDER;
-   }*/
+         Point p = {
+            .x = sin(i) * WIDTH / 4 + WIDTH / 2 + (rand() % 10) - 20,
+            .y = cos(i) * HEIGHT / 4 + HEIGHT / 2 + (rand() % 10) - 20,
+         };
+         
+         da_append(&points, p);
+   }
+   #endif
 
-   /*
-   points[0].x = 300;
-   points[0].y = 300;
-
-   points[1].x = 600;
-   points[1].y = 350;
+   #if 0
+   // Random
+   for (int i = 0; i < POINT_COUNT; ++i)
+   {
+      Point p = {
+         .x = (rand() % (WIDTH - BORDER * 2)) + BORDER,
+         .y = (rand() % (HEIGHT - BORDER * 2)) + BORDER
+      };
+      
+      da_append(&points, p);
+   }
+   #endif
    
-   points[2].x = 300;
-   points[2].y = 450;
-
-   points[3].x = 310;
-   points[3].y = 550;
-*/
    delaunay_free(&delaunay);
    delaunay = delaunay_init(points.items, points.count);
 }
@@ -230,7 +241,7 @@ void draw()
       Point p1 = POINTV(delaunay, TRIAV(delaunay, i).ix1);
       Point p2 = POINTV(delaunay, TRIAV(delaunay, i).ix2);
       Point p3 = POINTV(delaunay, TRIAV(delaunay, i).ix3);
-      /*
+
       if (p1.x == 2000 || p2.x == 2000 || p3.x == 2000)
          continue;
       if (p1.y == 2000 || p2.y == 2000 || p3.y == 2000)
@@ -243,15 +254,18 @@ void draw()
          continue;
       if (p1.y == 1000 || p2.y == 1000 || p3.y == 1000)
          continue;
-      */
+
       //printf(" = %.1f, %.1f  --  %.1f, %.1f  --  %.1f, %.1f\n", p1.x, p1.y, p2.x, p2.y, p3.x, p3.x);
       DrawLine(p1.x + offsetx, p1.y + offsety, p2.x + offsetx, p2.y + offsety, WHITE);
       DrawLine(p2.x + offsetx, p2.y + offsety, p3.x + offsetx, p3.y + offsety, WHITE);
       DrawLine(p1.x + offsetx, p1.y + offsety, p3.x + offsetx, p3.y + offsety, WHITE);
+
       /*
       Circle* circle = &TRIAV(delaunay, i).circle;
       DrawCircleLines(circle->center.x + offsetx, circle->center.y + offsety, circle->radius, RED);
+      */
 
+      /*
       char temp[100];
       sprintf(temp,"%d %d %d",
                TRIAV(delaunay, i).neighbours[0],
@@ -270,8 +284,8 @@ void draw()
 
 int main(void)
 {
-   //srand(time(NULL));
-   srand(13);
+   srand(time(NULL));
+   //srand(13);
    SetConfigFlags(FLAG_MSAA_4X_HINT);  // Try to enable MSAA 4X
    // SetConfigFlags(FLAG_WINDOW_RESIZABLE);
    InitWindow(WIDTH, HEIGHT, "Delaunay Triangulation");
@@ -282,6 +296,7 @@ int main(void)
 
    init();
 
+   bool go = false;
    while (!WindowShouldClose())
    {
       if (IsKeyPressed(KEY_Q))
@@ -291,6 +306,7 @@ int main(void)
       else if (IsKeyPressed(KEY_R))
       {
          init();
+         go = false;
       }
       else if (IsKeyPressed(KEY_S))
       {
@@ -317,14 +333,21 @@ int main(void)
          offsetx = 0;
          offsety = 0;
       }
+      else if (IsKeyPressed(KEY_G))
+      {
+         go = !go;
+      }
 
       BeginDrawing();
       ClearBackground(GetColor(0x181818FF));
 
-      DrawText("Q = Exit   R = Reset   S = Step", 20, HEIGHT - 20, 14, YELLOW);
+      DrawText("Q = Exit   R = Reset   S = Step   G = Go", 20, HEIGHT - 20, 14, YELLOW);
 
+      if (go)
+      {
          delaunay_step(&delaunay);
-
+      }
+      
       draw_title();
       draw();
 
